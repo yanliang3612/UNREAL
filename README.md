@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Official Pytorch implementation of arxiv 2023 paper "[UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification](https://arxiv.org/abs/2303.10371)"
+Official Pytorch implementation of Arxiv 2023 paper "[UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification](https://arxiv.org/abs/2303.10371)"
 
 ![unreal](figure/unreal.png)
 ![st](figure/st.png)
