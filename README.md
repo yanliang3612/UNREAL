@@ -1,4 +1,4 @@
-# UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification.(Arxiv 2023)
+# UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification. (Arxiv 2023)
 
 ## Introduction
 
