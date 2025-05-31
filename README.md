@@ -1,6 +1,6 @@
 # UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification. (Arxiv 2023)
 
-Official Pytorch implementation of Arxiv 2023 paper "[UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification](https://arxiv.org/abs/2303.10371)"
+Official Pytorch implementation of"[UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification](https://arxiv.org/abs/2303.10371)" (Arxiv 2023, In Submission).
 
 [[Project Page](https://divinyan.com/UNREAL/)] [[Arxiv](https://arxiv.org/abs/2303.10371)] [[OpenReview](https://openreview.net/forum?id=Hh0BdBf6Ls) [[Slides]()] [[Poster]()]
 
