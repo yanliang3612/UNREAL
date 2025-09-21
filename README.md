@@ -2,7 +2,7 @@
 
 Official Pytorch implementation of"Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Imbalanced Node Classification" (NeurIPS 2025).
 
-**Previous Version**: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)
+**Previous Version: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)**
 
 <!-- [[Project Page](https://divinyan.com/UNREAL/)] [[Arxiv](https://arxiv.org/abs/2303.10371)] [[OpenReview](https://openreview.net/forum?id=Hh0BdBf6Ls) [[Slides]()] [[Poster]()] -->
 
