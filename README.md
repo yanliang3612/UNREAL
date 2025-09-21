@@ -1,16 +1,18 @@
 # UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification. (Arxiv 2023)
 
-Official Pytorch implementation of"[UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification](https://arxiv.org/abs/2303.10371)" (Arxiv 2023, In Submission).
+Official Pytorch implementation of"Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Imbalanced Node Classification" (NeurIPS 2025).
 
-[[Project Page](https://divinyan.com/UNREAL/)] [[Arxiv](https://arxiv.org/abs/2303.10371)] [[OpenReview](https://openreview.net/forum?id=Hh0BdBf6Ls) [[Slides]()] [[Poster]()]
+**Previous Version**: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)
+
+<!-- [[Project Page](https://divinyan.com/UNREAL/)] [[Arxiv](https://arxiv.org/abs/2303.10371)] [[OpenReview](https://openreview.net/forum?id=Hh0BdBf6Ls) [[Slides]()] [[Poster]()] -->
 
 Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang 
 
 ## Introduction
 
 
-![unreal](figure/final.png)
-Extremely skewed label distributions are common in real-world node classification tasks. If not dealt with appropriately, it significantly hurts the performance of GNNs in minority classes. Due to its practical importance, there have been a series of recent research devoted to this challenge. Existing over-sampling techniques smooth the label distribution by generating ``fake'' minority nodes and synthesizing their features and local topology, which largely ignore the rich information of unlabeled nodes on graphs. In this paper, we propose UNREAL, an iterative over-sampling method. The first key difference is that we only add unlabeled nodes instead of synthetic nodes, which eliminates the challenge of feature and neighborhood generation. To select which unlabeled nodes to add, we propose geometric ranking to rank unlabeled nodes. Geometric ranking exploits unsupervised learning in the node embedding space to effectively calibrates pseudo-label assignment. Finally, we identify the issue of geometric imbalance in the embedding space and provide a simple metric to filter out geometrically imbalanced nodes. Extensive experiments on real-world benchmark datasets are conducted, and the empirical results show that our method significantly outperforms current state-of-the-art methods consistent on different datasets with different imbalance ratios.
+<!-- ![unreal](figure/final.png) -->
+Class imbalance in graph data poses a major challenge for effective node classification, particularly in semi-supervised settings. In this work, we formally introduce the concept of geometric imbalance, characterizing how class imbalance induces geometric ambiguity among minority nodes in the embedding space. We provide a rigorous theoretical analysis and propose a unified framework to explicitly mitigate geometric imbalance through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised imbalanced node classification. The detailed code implementation of this work is provided in the supplementary material.
 
 ## Environment
 ```bash
