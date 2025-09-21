@@ -198,9 +198,9 @@ All the algorithms and models are implemented in Python and PyTorch Geometric. E
 Feel free to cite this work if you find it useful to you!
 ```bash
 @article{yan2023unreal,
-  title={Unreal: Unlabeled nodes retrieval and labeling for heavily-imbalanced node classification},
-  author={Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Zhou, Min and Huang, Zengfeng},
-  journal={arXiv preprint arXiv:2303.10371},
-  year={2023}
+  title={Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Graph Learning},
+  author={Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Yang, Mengling and Yang, Chen, and Zhou, Min and Ding, Weiyang and Xie, Yutong and Huang, Zengfeng},
+  journal={NeurIPS 2025},
+  year={2025}
 }
 ```
