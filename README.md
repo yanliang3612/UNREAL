@@ -1,6 +1,6 @@
-# Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Graph Learning (NeurIPS 2025).
+# Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025).
 
-Official Pytorch implementation of"Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Graph Learning" (NeurIPS 2025).
+Official Pytorch implementation of"Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
 
 **Previous Version: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)**
 
@@ -197,10 +197,11 @@ All the algorithms and models are implemented in Python and PyTorch Geometric. E
 ## Cite Us
 Feel free to cite this work if you find it useful to you!
 ```bash
-@article{yan2023unreal,
-  title={Geometric Imbalance on Riemannian Manifolds in Semi-Supervised Graph Learning},
-  author={Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Yang, Mengling and Yang, Chen, and Zhou, Min and Ding, Weiyang and Xie, Yutong and Huang, Zengfeng},
-  journal={NeurIPS 2025},
-  year={2025}
-}
+@inproceedings{yan2025geometric,
+      title={Geometric Imbalance in Semi-Supervised Imbalanced Node Classification},
+      author={Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Yang, Mengling and Yang, Chen, and Zhou, Min and Ding, Weiyang and Xie, Yutong and Huang, Zengfeng},
+      booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+      year={2025},
+      url={https://openreview.net/forum?id=BND9CutZf6}
+      }
 ```
