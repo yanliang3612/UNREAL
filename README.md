@@ -1,15 +1,16 @@
 # Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025).
 
-Official Pytorch implementation of"Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
+Official Pytorch implementation of "Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
 
 **Previous Version: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)**
 
-[[Project Page](https://divinyan.com/UNREAL/)] [[Paper](https://openreview.net/forum?id=BND9CutZf6&referrer=%5Bthe%20profile%20of%20Liang%20Yan%5D(%2Fprofile%3Fid%3D~Liang_Yan5))] [[Arxiv](https://arxiv.org/abs/2303.10371)] 
+[[Project Page]](https://divinyan.com/UNREAL/) [[Paper]](https://openreview.net/forum?id=BND9CutZf6&referrer=%5Bthe%20profile%20of%20Liang%20Yan%5D(%2Fprofile%3Fid%3D~Liang_Yan5)) [[Arxiv]](https://arxiv.org/abs/2303.10371)
 
 Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang 
 
-## Introduction
+---
 
+## Introduction
 
 <!-- ![unreal](figure/final.png) -->
 Class imbalance in graph data poses a major challenge for effective node classification, particularly in semi-supervised settings. In this work, we formally introduce the concept of geometric imbalance, characterizing how class imbalance induces geometric ambiguity among minority nodes in the embedding space. We provide a rigorous theoretical analysis and propose a unified framework to explicitly mitigate geometric imbalance through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised imbalanced node classification. The detailed code implementation of this work is provided in the supplementary material.
