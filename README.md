@@ -10,13 +10,11 @@ Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Z
 
 ---
 
-## Introduction
-
+## 1. Introduction
 ![unreal](figure/unreal_pipeline.png)
-
 Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
 
-## Environment
+## 2. Environment
 ```bash
 conda create -n "unreal" python=3.8.13
 source activate unreal
@@ -28,8 +26,8 @@ pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_scatter-2.1.0%2B
 pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_sparse-0.6.16%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
 pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.1%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
 ```
-## Training Hyperparameters
-### Cora-Semi (imbalance ratio= 10, 20, 50, 100)
+## 3. Training Hyperparameters
+### 3.1 Cora-Semi (imbalance ratio= 10, 20, 50, 100)
 - Cora-GCN (imbalance ratio= 10)
   ```bash
   python main.py --dataset Cora --repetitions 5 --imb_ratio 10 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
@@ -79,7 +77,7 @@ pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.
   python main.py --dataset Cora --repetitions 5 --imb_ratio 100 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
   ```
 
-### CiteSeer-Semi (imbalance ratio= 10, 20, 50, 100)
+### 3.2 CiteSeer-Semi (imbalance ratio= 10, 20, 50, 100)
 - CiteSeer-GCN (imbalance ratio= 10)
   ```bash
   python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 10 --net GCN  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
@@ -129,7 +127,7 @@ pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.
   python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 100 --net SAGE  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
   ```
 
-### PubMed-Semi (imbalance ratio= 10, 20, 50, 100)
+### 3.3 PubMed-Semi (imbalance ratio= 10, 20, 50, 100)
 - PubMed-GCN (imbalance ratio= 10)
   ```bash
   python main.py --dataset  PubMed --repetitions 5 --imb_ratio 10 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
@@ -180,8 +178,8 @@ pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.
   ```
 
 
-## Baselines
-### The Implementation of Baselines and the Configuration of Hyperparameters
+## 4. Baselines
+The Implementation of Baselines and the Configuration of Hyperparameters:
 - For the implementation and hyperparameters setting of **Re-Weight, PC Softmax, BalancedSoftmax, TAM**, please refer to [TAM](https://github.com/Jaeyun-Song/TAM).
 - For the implementation and hyperparameters setting of **GraphSmote**, please refer to [GraphSmote](https://github.com/TianxiangZhao/GraphSmote).
 - For the implementation and hyperparameters setting of **Renode**, please refer to [Renode](https://github.com/victorchen96/ReNode).
@@ -192,11 +190,11 @@ We strictly adhere to the hyperparameter settings as specified in these papers. 
 
 
 
-## Configuration
+## 5. Configuration
 All the algorithms and models are implemented in Python and PyTorch Geometric. Experiments are conducted on a server with an NVIDIA 3090 GPU (24 GB memory) and an Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz.
 
 
-## Cite Us
+## 6. Cite Us
 Feel free to cite this work if you find it useful to you!
 ```bash
 @inproceedings{yan2025geometric,
