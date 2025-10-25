@@ -1,4 +1,4 @@
-# Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025).
+# Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025)
 
 Official Pytorch implementation of "Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
 
