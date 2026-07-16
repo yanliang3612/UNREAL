@@ -1,334 +1,360 @@
-import torch
-import torch.nn as nn
-from torch.optim import Adam
-import torch.nn.functional as F
-import numpy as np
 from copy import deepcopy
-from src.utils import reset, set_random_seeds, random_seed
-from src.loss_function import My_loss, My_end_loss
-from src.rbo import rbo_score
-# masking
-from sklearn.cluster import KMeans as SklearnKMeans
-from embedder import embedder
-from torch_geometric.utils import to_dense_adj
-from src.focalloss import FocalLoss
-from src.args import parse_args
-import os.path as osp
-from src.data import Planetoid
+
+import numpy as np
+import torch
+import torch.nn.functional as F
 import torch_geometric.transforms as T
+from sklearn.cluster import KMeans as SklearnKMeans
+from torch import nn
+from torch.optim import Adam
+
+from embedder import Embedder
 from layers import GNN, Classifier
+from src.data import Planetoid
+from src.rbo import rbo_score
+from src.utils import random_seed, reset, set_random_seeds
 
 
-class Summer_Trainer(embedder):
+class SummerTrainer(Embedder):
+    PRETRAIN_EPOCHS = 200
+    SUPPORTED_DATASETS = {"Cora", "CiteSeer", "PubMed"}
 
-    def __init__(self, args):
-        embedder.__init__(self, args)
-        self.args = args
-
-    def _init_model(self):
+    def _init_model(self) -> None:
         self.model = Summer(self.encoder, self.classifier).to(self.device)
-        self.optimizer = Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.decay)
+        self.optimizer = Adam(
+            self.model.parameters(),
+            lr=self.args.lr,
+            weight_decay=self.args.decay,
+        )
 
-    def _run_kmeans(self, rep):
-        """Cluster normalized embeddings with the configured K-means backend."""
-        if self.args.kmeans_backend == 'cpu':
-            rep_cpu = rep.to('cpu').numpy()
-            clustering = SklearnKMeans(n_clusters=self.args.num_K).fit(rep_cpu)
-            return clustering.predict(rep_cpu), rep_cpu
+    def _run_kmeans(self, representations):
+        """Cluster normalized embeddings with the configured backend."""
+        if self.args.kmeans_backend == "cpu":
+            representations_cpu = representations.cpu().numpy()
+            clustering = SklearnKMeans(
+                n_clusters=self.args.num_K,
+                n_init=10,
+            ).fit(representations_cpu)
+            cluster_labels = clustering.predict(representations_cpu)
+            return cluster_labels, representations_cpu
 
-        if not rep.is_cuda:
+        if not representations.is_cuda:
             raise RuntimeError(
-                "GPU K-means requires a CUDA-enabled PyTorch installation and an available GPU."
+                "GPU K-means requires a CUDA-enabled PyTorch installation "
+                "and an available GPU."
             )
 
         try:
             from torch_kmeans import KMeans as TorchKMeans
         except ImportError as exc:
             raise ImportError(
-                "GPU K-means requires torch-kmeans. "
-                "Install it with `python -m pip install torch-kmeans==0.2.0`."
+                "GPU K-means requires torch-kmeans. Install it with "
+                "`python -m pip install torch-kmeans==0.2.0`."
             ) from exc
 
-        # Match the main scikit-learn defaults while keeping the embeddings on GPU.
         clustering = TorchKMeans(
             n_clusters=self.args.num_K,
-            init_method='k-means++',
+            init_method="k-means++",
             num_init=10,
             max_iter=300,
             tol=1e-4,
-            seed=int(torch.initial_seed() % (2 ** 31)),
+            seed=int(torch.initial_seed() % (2**31)),
             verbose=False,
         )
         with torch.no_grad():
-            clustering_result = clustering(rep.unsqueeze(0)).labels.squeeze(0)
+            cluster_labels = clustering(representations.unsqueeze(0)).labels.squeeze(0)
 
-        return clustering_result.to('cpu').numpy(), rep.to('cpu').numpy()
+        return (
+            cluster_labels.cpu().numpy(),
+            representations.cpu().numpy(),
+        )
 
+    def _init_dataset(self) -> None:
+        if self.args.dataset not in self.SUPPORTED_DATASETS:
+            raise ValueError(
+                f"Unsupported dataset: {self.args.dataset}. "
+                f"Choose one of {sorted(self.SUPPORTED_DATASETS)}."
+            )
 
-    def _init_dataset(self):
+        self.data = Planetoid(
+            self.path,
+            self.args.dataset,
+            transform=T.NormalizeFeatures(),
+            split="public",
+            ratio=self.args.imb_ratio,
+        )[0].to(self.device)
 
-        if self.args.dataset == 'Cora' or self.args.dataset == 'CiteSeer' or self.args.dataset == 'PubMed':
-            self.data = \
-                Planetoid(self.path, self.args.dataset, transform=T.NormalizeFeatures(), split='public',
-                          ratio=self.args.imb_ratio)[0].to(
-                    self.device)
-        elif self.args.dataset == 'Computers':
-            print("wait")
-        self.train_mask, self.val_mask, self.test_mask = self.data.train_mask, self.data.val_mask, self.data.test_mask
-
+        self.train_mask = self.data.train_mask
+        self.val_mask = self.data.val_mask
+        self.test_mask = self.data.test_mask
         self.labels = deepcopy(self.data.y)
         self.running_train_mask = deepcopy(self.train_mask)
-        eta = self.data.num_nodes / (to_dense_adj(self.data.edge_index).sum() / self.data.num_nodes) ** len(
-            self.hidden_layers)
-        self.t = (self.labels[self.train_mask].unique(return_counts=True)[1] * 3 * eta / len(
-            self.labels[self.train_mask])).type(torch.int64)
-        self.t = self.t / self.args.rounds
+
+        # This is algebraically equivalent to summing a dense adjacency matrix,
+        # but avoids an O(num_nodes^2) allocation.
+        edge_count = torch.tensor(
+            self.data.edge_index.size(1),
+            dtype=torch.float32,
+            device=self.device,
+        )
+        average_degree = edge_count / self.data.num_nodes
+        eta = self.data.num_nodes / average_degree ** len(self.hidden_layers)
+
+        label_counts = self.labels[self.train_mask].unique(return_counts=True)[1]
+        additions = (label_counts * 3 * eta / len(self.labels[self.train_mask])).to(
+            torch.int64
+        )
+        self.t = additions / self.args.rounds
         self.t[:4] = self.args.ad
         self.t[-3:] = self.args.ad
 
+    def _build_cluster_pseudo_labels(
+        self,
+        cluster_labels,
+        representations,
+    ):
+        labels_cpu = self.labels.cpu()
+        train_mask_cpu = self.running_train_mask.cpu()
 
-    def pretrain(self, mask, round):
-        # 先把模型按照原来的数据集训练200个epoch
-        for epoch in range(200):
+        labeled_centroids = []
+        for class_index in range(self.num_classes):
+            class_mask = ((labels_cpu == class_index) & train_mask_cpu).numpy()
+            labeled_centroids.append(representations[class_mask].mean(axis=0))
+        labeled_centroids = np.stack(labeled_centroids)
+
+        pseudo_labels = np.full_like(cluster_labels, fill_value=-1)
+        unique_clusters = np.unique(cluster_labels)
+        if len(unique_clusters) != self.args.num_K:
+            print("Warning: K-means produced one or more empty clusters.")
+
+        unlabeled_mask = ~train_mask_cpu.numpy()
+        for cluster_index in unique_clusters:
+            cluster_mask = (cluster_labels == cluster_index) & unlabeled_mask
+            if not cluster_mask.any():
+                continue
+
+            cluster_centroid = representations[cluster_mask].mean(axis=0)
+            distances = ((labeled_centroids - cluster_centroid) ** 2).sum(axis=1)
+            pseudo_labels[cluster_mask] = np.argmin(distances)
+
+        assert (pseudo_labels[unlabeled_mask] == -1).sum() == 0
+        return pseudo_labels, labeled_centroids
+
+    def pretrain(self, repetition: int, round_index: int) -> None:
+        """Run one UNREAL self-training round."""
+        for epoch in range(self.PRETRAIN_EPOCHS):
             self.model.train()
             self.optimizer.zero_grad()
 
             logits, _ = self.model.cls(self.data)
-
-            loss = F.cross_entropy(logits[self.running_train_mask], self.labels[self.running_train_mask])
-            # loss = My_loss(logits, self.labels, round, self.data, self.running_train_mask, self.args).loss()
-            # loss = My_end_loss(logits, self.labels, self.data, self.running_train_mask, self.args).loss()
-
-            # if  rounds == 0:
-            #     alpha = [1, 1, 1, 1, 20, 20, 20]
-            # elif rounds == 1:
-            #     alpha = [1, 1, 1, 1, 20, 20, 20]
-            # elif rounds == 2:
-            #     alpha = [1, 1, 1, 1, 20, 20, 20]
-            # self.FocalLoss= FocalLoss(gamma=2, alpha=alpha)
-            # loss = self.FocalLoss(logits[self.running_train_mask], self.labels[self.running_train_mask])
-
+            loss = F.cross_entropy(
+                logits[self.running_train_mask],
+                self.labels[self.running_train_mask],
+            )
             loss.backward()
             self.optimizer.step()
 
-            st = '[Repetitions : {}][Rounds : {}/{}][Epoch {}/{}] Loss: {:.4f}'.format(mask + 1, round + 1,
-                                                                                       self.args.rounds, epoch + 1, 200,
-                                                                                       loss.item())
-            print(st)
+            print(
+                f"[Repetitions: {repetition + 1}]"
+                f"[Rounds: {round_index + 1}/{self.args.rounds}]"
+                f"[Epoch: {epoch + 1}/{self.PRETRAIN_EPOCHS}] "
+                f"Loss: {loss.item():.4f}"
+            )
 
-        # 如果用聚类的话
-        if self.args.clustering:
-            # Clustering
-            self.model.eval()
-            rep = self.model.encoder(self.data).detach()
-            # 归一化操作
-            rep = F.normalize(rep, dim=1)
-            # 得到每一个点的聚类结果
-            clustering_result, rep = self._run_kmeans(rep)
+        if not self.args.clustering:
+            raise RuntimeError("UNREAL requires clustering to generate pseudo-labels.")
 
-            # Pseudo tags
-            labeled_centroid_list = []
-            for m in range(self.num_classes):
-                m_mask = torch.logical_and(self.labels == m, self.running_train_mask).to('cpu')
-                m_rep = rep[m_mask]
-                m_centroid = m_rep.mean(0)
-                labeled_centroid_list.append(m_centroid)
-            labeled_centroids = np.stack(labeled_centroid_list)
-
-            pseudo_labels = np.zeros_like(clustering_result)
-            pseudo_labels -= 1
-            #
-            clusters = np.unique(clustering_result)
-            num_cluster = clusters.shape[0]
-            if num_cluster != self.args.num_K:
-                print("Empty cluster is occured")
-            for l in clusters:
-                l_mask = torch.logical_and(torch.tensor(clustering_result == l).to(self.device),
-                                           ~self.running_train_mask).to('cpu')
-                l_rep = rep[l_mask]
-                l_centroid = l_rep.mean(0)
-                distance = (labeled_centroids - l_centroid) ** 2
-                distance = distance.sum(1)
-                pseudo_label = np.argmin(distance)
-                pseudo_labels[l_mask] = pseudo_label
-            assert (pseudo_labels[~self.running_train_mask.to('cpu')] == -1).sum() == 0
-
-        # Pseudo-labeling
         self.model.eval()
-        logits, _ = self.model.cls(self.data)
-        predictions = F.softmax(logits, dim=1)
-        if self.args.clustering:
-            y_train, self.running_train_mask = self.UNREAL(predictions, pseudo_labels,rep,labeled_centroids)
-        else:
-            pass
-        self.labels[self.running_train_mask] = torch.argmax(y_train[self.running_train_mask], dim=1)
+        with torch.no_grad():
+            representations = F.normalize(
+                self.model.encoder(self.data),
+                dim=1,
+            )
+        cluster_labels, representations = self._run_kmeans(representations)
+        pseudo_labels, labeled_centroids = self._build_cluster_pseudo_labels(
+            cluster_labels,
+            representations,
+        )
 
-    def train(self):
+        with torch.no_grad():
+            logits, _ = self.model.cls(self.data)
+            predictions = F.softmax(logits, dim=1)
 
+        pseudo_targets, self.running_train_mask = self.UNREAL(
+            predictions,
+            pseudo_labels,
+            representations,
+            labeled_centroids,
+        )
+        self.labels[self.running_train_mask] = torch.argmax(
+            pseudo_targets[self.running_train_mask],
+            dim=1,
+        )
+
+    def train(self) -> None:
         for repetition in range(self.args.repetitions):
-            set_random_seeds(random_seed(repetition))
-            # self.train_mask, self.val_mask, self.test_mask = masking(fold, self.data)
+            set_random_seeds(random_seed(repetition, self.args.dataset))
             self._init_dataset()
 
             input_size = self.data.x.size(1)
-            rep_size = self.hidden_layers[-1]
-
+            representation_size = self.hidden_layers[-1]
             self.unique_labels = self.data.y.unique()
             self.num_classes = len(self.unique_labels)
 
-            self.encoder = GNN([input_size] + self.hidden_layers)
-            self.classifier = Classifier(rep_size, self.num_classes)
+            self.encoder = GNN(
+                [input_size] + self.hidden_layers,
+                net=self.args.net,
+                n_heads=self.args.n_head,
+                chebyshev_order=self.args.chebgcn_para,
+            )
+            self.classifier = Classifier(
+                representation_size,
+                self.num_classes,
+            )
 
-            for round in range(self.args.rounds):
+            for round_index in range(self.args.rounds):
                 self._init_model()
-                self.pretrain(repetition, round)
+                self.pretrain(repetition, round_index)
 
             for epoch in range(1, self.args.epochs + 1):
                 self.model.train()
                 self.optimizer.zero_grad()
 
                 logits, _ = self.model.cls(self.data)
-                loss = F.cross_entropy(logits[self.running_train_mask], self.labels[self.running_train_mask])
-
-                # loss = My_end_loss(logits, self.labels,self.data, self.running_train_mask, self.args).loss()
-
+                loss = F.cross_entropy(
+                    logits[self.running_train_mask],
+                    self.labels[self.running_train_mask],
+                )
                 loss.backward()
                 self.optimizer.step()
 
-                st = '[Repetitions : {}][Epoch {}/{}] Loss: {:.4f}'.format(repetition + 1, epoch, self.args.epochs,
-                                                                           loss.item())
-
-                # evaluation
-                self.evaluate(self.data, st)
+                status = (
+                    f"[Repetitions: {repetition + 1}]"
+                    f"[Epoch: {epoch}/{self.args.epochs}] "
+                    f"Loss: {loss.item():.4f} "
+                )
+                self.evaluate(self.data, status)
                 if self.cnt == self.args.patience:
-                    print("early stopping!")
+                    print("Early stopping.")
                     break
+
             self.save_results(repetition)
 
         self.summary()
 
-    def UNREAL(self, predictions, pseudo_labels,rep,labeled_centroids):
-        new_gcn_index = torch.argmax(predictions, dim=1)
-        confidence = torch.max(predictions, dim=1)[0]
-        confidence_cpu = confidence.detach().to('cpu').numpy()
-        sorted_index = torch.argsort(-confidence)
-        y_train = F.one_hot(self.labels).float()
-        y_train[~self.running_train_mask] = 0
-        no_class = y_train.shape[1]
-        assert len(self.t) >= no_class
-        # index = []
-        # count = [0 for i in range(no_class)]
-        # for i in sorted_index:
-        #     for j in range(no_class):
-        #         if new_gcn_index[i] == j and count[j] < self.t[j] and not self.running_train_mask[i]:
-        #             index.append(i.item())
-        #             count[j] += 1
-        index_list = []
-        distance_list = []
-        confidence_list = []
+    def UNREAL(
+        self,
+        predictions,
+        pseudo_labels,
+        representations,
+        labeled_centroids,
+    ):
+        classifier_labels = torch.argmax(predictions, dim=1)
+        classifier_labels_cpu = classifier_labels.cpu().numpy()
+        confidence_cpu = torch.max(predictions, dim=1)[0].cpu().numpy()
+        running_train_mask_cpu = self.running_train_mask.cpu().numpy()
 
-        soft_label_dif_list = []
+        pseudo_targets = F.one_hot(self.labels).float()
+        pseudo_targets[~self.running_train_mask] = 0
+        num_classes = pseudo_targets.shape[1]
+        assert len(self.t) >= num_classes
 
-        for j in range(no_class):
-            index_list.append([])
+        candidate_indices = [[] for _ in range(num_classes)]
+        for node_index, classifier_label in enumerate(classifier_labels_cpu):
+            if (
+                not running_train_mask_cpu[node_index]
+                and pseudo_labels[node_index] == classifier_label
+            ):
+                candidate_indices[int(classifier_label)].append(node_index)
 
-        for l in range(len(new_gcn_index)):
-            for j in range(no_class):
-                if pseudo_labels[l] == j and new_gcn_index[l] == j and not self.running_train_mask[l]:
-                    index_list[j].append(l)
-                else:
-                    soft_label_dif_list.append(l)
+        ranking_indices = []
+        for class_index, class_candidates in enumerate(candidate_indices):
+            class_representations = representations[class_candidates]
+            distances = (
+                (class_representations - labeled_centroids[class_index]) ** 2
+            ).sum(axis=1)
+            confidences = confidence_cpu[class_candidates]
 
-        for j in range(no_class):
-            rep_j = rep[index_list[j]]
-            distance = (rep_j - labeled_centroids[j]) ** 2
-            distance = distance.sum(1)
-            distance_list.append(distance)
+            confidence_order = confidences.argsort()[::-1]
+            confidence_ranks = confidence_order.argsort()
+            distance_order = distances.argsort()
+            distance_ranks = distance_order.argsort()
 
-        for j in range(no_class):
-            confidence_list.append(confidence_cpu[index_list[j]])
-
-        new_ranks_index_list = []
-        rbo_score_list = []
-        for j in range(no_class):
-            temp_confidence = confidence_list[j].argsort()[::-1]
-            ranks_confidence = temp_confidence.argsort()
-            temp_distance = distance_list[j].argsort()
-            ranks_distance = temp_distance.argsort()
-            rbo = rbo_score(ranks_confidence, ranks_distance, self.args.rbo)
-            rbo_score_list.append(rbo)
+            rbo = rbo_score(
+                confidence_ranks,
+                distance_ranks,
+                self.args.rbo,
+            )
             if rbo >= 0.5:
-                new_ranks = rbo * ranks_distance + (1 - rbo) * ranks_confidence
+                combined_ranks = rbo * distance_ranks + (1 - rbo) * confidence_ranks
             else:
-                new_ranks = (1 - rbo) * ranks_distance + rbo * ranks_confidence
-            new_ranks_index = new_ranks.argsort()
-            new_ranks_index_list.append(new_ranks_index)
+                combined_ranks = (1 - rbo) * distance_ranks + rbo * confidence_ranks
+            ranking_indices.append(combined_ranks.argsort())
 
-        selcted_index = []
-        new_count = [0 for i in range(no_class)]
-        deleted_index = []
+        selected_indices = []
+        selected_counts = [0] * num_classes
 
-        for j in range(no_class):
-            for i in np.array(index_list[j])[new_ranks_index_list[j]]:
-                if new_count[j] < self.t[j]:
-                    node_distance = (rep[i] - labeled_centroids) ** 2
-                    node_distance = node_distance.sum(1)
-                    node_distance_index = node_distance.argsort()
-                    m = node_distance_index[0];
-                    n = node_distance_index[1]
-                    if (node_distance[n] - node_distance[m]) / node_distance[m] > self.args.threshold:
-                        selcted_index.append(i.item())
-                        new_count[j] += 1
-                    else:
-                        deleted_index.append(i.item())
-                else:
+        for class_index in range(num_classes):
+            ordered_candidates = np.asarray(candidate_indices[class_index])[
+                ranking_indices[class_index]
+            ]
+            for node_index in ordered_candidates:
+                if selected_counts[class_index] >= self.t[class_index]:
                     break
 
-        filtered_index = selcted_index
-        deleted_index = []
-        # for i in index:
-        #     if pseudo_labels[i] == new_gcn_index[i].item():
-        #         filtered_index.append(i)
-        #     else:
-        #         deleted_index.append(i)
+                node_distances = (
+                    (representations[node_index] - labeled_centroids) ** 2
+                ).sum(axis=1)
+                nearest_classes = node_distances.argsort()
+                nearest = nearest_classes[0]
+                second_nearest = nearest_classes[1]
+                distance_margin = (
+                    node_distances[second_nearest] - node_distances[nearest]
+                ) / node_distances[nearest]
 
-        indicator = torch.zeros(self.train_mask.shape, dtype=torch.bool)
-        indicator[filtered_index] = True
-        indicator = torch.logical_and(torch.logical_not(self.running_train_mask), indicator.to(self.device))
-        prediction = torch.zeros(predictions.shape).to(self.device)
-        prediction[torch.arange(len(new_gcn_index)), new_gcn_index] = 1.0
-        prediction[self.running_train_mask] = y_train[self.running_train_mask]
-        y_train = deepcopy(y_train)
-        train_mask = deepcopy(self.running_train_mask)
-        train_mask[indicator] = 1
-        y_train[indicator] = prediction[indicator]
-        return y_train, train_mask
+                if distance_margin > self.args.threshold:
+                    selected_indices.append(int(node_index))
+                    selected_counts[class_index] += 1
 
+        indicator = torch.zeros_like(self.running_train_mask)
+        indicator[selected_indices] = True
+        indicator &= ~self.running_train_mask
 
+        hard_predictions = torch.zeros_like(predictions)
+        node_indices = torch.arange(
+            len(classifier_labels),
+            device=self.device,
+        )
+        hard_predictions[node_indices, classifier_labels] = 1.0
+        hard_predictions[self.running_train_mask] = pseudo_targets[
+            self.running_train_mask
+        ]
+
+        updated_targets = deepcopy(pseudo_targets)
+        updated_train_mask = deepcopy(self.running_train_mask)
+        updated_train_mask[indicator] = True
+        updated_targets[indicator] = hard_predictions[indicator]
+        return updated_targets, updated_train_mask
 
 
 class Summer(nn.Module):
-    def __init__(self, encoder, classifier):
+    def __init__(self, encoder, classifier) -> None:
         super().__init__()
         self.encoder = encoder
         self.classifier = classifier
         self.reset_parameters()
 
-    def forward(self, x):
-        out = self.encoder(x)
-        logits, predictions = self.classifier(out)
-        return logits, predictions
+    def forward(self, data):
+        embeddings = self.encoder(data)
+        return self.classifier(embeddings)
 
-    def cls(self, x):
-        return self.forward(x)
+    def cls(self, data):
+        return self.forward(data)
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         reset(self.encoder)
         reset(self.classifier)
 
 
-def sample_mask(idx, l):
-    """Create mask."""
-    mask = torch.zeros(l)
-    mask[idx] = 1
-    return torch.as_tensor(mask, dtype=torch.bool)
+# Backward-compatible class name used by the original entry point.
+Summer_Trainer = SummerTrainer

@@ -1,102 +1,106 @@
-import torch
-from torch_geometric.nn import BatchNorm, GCNConv, LayerNorm, SAGEConv, Sequential, APPNP,GATConv,SAGEConv,SGConv,ChebConv
-import torch.nn as nn
-import torch.nn.functional as F
-from src.args import parse_args
+from typing import Sequence
 
-# Borrowed from BGRL
-# class GCN(nn.Module):
-#     def __init__(self, layer_sizes, batchnorm_mm=0.99):
-#         super().__init__()
-#
-#         self.input_size, self.representation_size = layer_sizes[0], layer_sizes[-1]
-#
-#         layers = []
-#         for in_dim, out_dim in zip(layer_sizes[:-1], layer_sizes[1:]):
-#             #layers.append( (nn.Dropout(drop_rate), 'x -> x'), )
-#             layers.append((GCNConv(in_dim, out_dim), 'x, edge_index -> x'),)
-#             layers.append(BatchNorm(out_dim, momentum=batchnorm_mm))
-#             layers.append(nn.PReLU())
-#
-#         self.model = Sequential('x, edge_index', layers)
-#
-#     def forward(self, data):
-#         return self.model(data.x, data.edge_index)
-#
-#     def reset_parameters(self):
-#         self.model.reset_parameters()
+from torch import nn
+from torch_geometric.nn import (
+    BatchNorm,
+    ChebConv,
+    GATConv,
+    GCNConv,
+    SAGEConv,
+    Sequential,
+    SGConv,
+)
 
-#SAGE
-args = parse_args()
 
 class GNN(nn.Module):
-    def __init__(self, layer_sizes, batchnorm_mm=0.99):
+    """Configurable message-passing encoder used by UNREAL."""
+
+    def __init__(
+        self,
+        layer_sizes: Sequence[int],
+        batchnorm_mm: float = 0.99,
+        *,
+        net: str = "GCN",
+        n_heads: int = 8,
+        chebyshev_order: int = 2,
+    ) -> None:
         super().__init__()
+        self.input_size = layer_sizes[0]
+        self.representation_size = layer_sizes[-1]
+        self.net = net.upper()
 
-        self.input_size, self.representation_size = layer_sizes[0], layer_sizes[-1]
-        layers = []
-        if args.net == 'SGC':
-            in_dim, out_dim = self.input_size, self.representation_size
-            layers.append((SGConv(in_dim, out_dim, K=int(len(layer_sizes) - 1), cached=True), 'x, edge_index -> x'), )
-            layers.append(BatchNorm(out_dim, momentum=batchnorm_mm))
-            layers.append(nn.PReLU())
+        if self.net == "SGC":
+            layers = self._build_sgc_layers(layer_sizes, batchnorm_mm)
         else:
-            for in_dim, out_dim in zip(layer_sizes[:-1], layer_sizes[1:]):
-                # layers.append( (nn.Dropout(drop_rate), 'x -> x'), )
-                if args.net == 'GCN' :
-                    layers.append((GCNConv(in_dim, out_dim), 'x, edge_index -> x'), )
-                elif args.net == 'GAT' :
-                    layers.append((GATConv(in_dim, out_dim // args.n_head, heads=args.n_head), 'x, edge_index -> x'), )
-                elif args.net == 'SAGE':
-                    layers.append((SAGEConv(in_dim, out_dim), 'x, edge_index -> x'), )
-                elif args.net == 'CHEB':
-                    layers.append((ChebConv(in_dim, out_dim,args.chebgcn_para), 'x, edge_index -> x'), )
+            layers = self._build_message_passing_layers(
+                layer_sizes,
+                n_heads,
+                chebyshev_order,
+                batchnorm_mm,
+            )
 
-                layers.append(BatchNorm(out_dim, momentum=batchnorm_mm))
-                layers.append(nn.PReLU())
+        self.model = Sequential("x, edge_index", layers)
 
-        self.model = Sequential('x, edge_index', layers)
+    def _build_sgc_layers(
+        self,
+        layer_sizes: Sequence[int],
+        batchnorm_momentum: float,
+    ):
+        convolution = SGConv(
+            self.input_size,
+            self.representation_size,
+            K=len(layer_sizes) - 1,
+            cached=True,
+        )
+        return [
+            (convolution, "x, edge_index -> x"),
+            BatchNorm(self.representation_size, momentum=batchnorm_momentum),
+            nn.PReLU(),
+        ]
 
+    def _build_message_passing_layers(
+        self,
+        layer_sizes: Sequence[int],
+        n_heads: int,
+        chebyshev_order: int,
+        batchnorm_momentum: float,
+    ):
+        layers = []
+        for input_dim, output_dim in zip(layer_sizes[:-1], layer_sizes[1:]):
+            convolution = self._make_convolution(
+                input_dim,
+                output_dim,
+                n_heads,
+                chebyshev_order,
+            )
+            layers.extend(
+                [
+                    (convolution, "x, edge_index -> x"),
+                    BatchNorm(output_dim, momentum=batchnorm_momentum),
+                    nn.PReLU(),
+                ]
+            )
+        return layers
+
+    def _make_convolution(
+        self,
+        input_dim: int,
+        output_dim: int,
+        n_heads: int,
+        chebyshev_order: int,
+    ):
+        if self.net == "GCN":
+            return GCNConv(input_dim, output_dim)
+        if self.net == "GAT":
+            return GATConv(input_dim, output_dim // n_heads, heads=n_heads)
+        if self.net == "SAGE":
+            return SAGEConv(input_dim, output_dim)
+        if self.net == "CHEB":
+            return ChebConv(input_dim, output_dim, chebyshev_order)
+        raise ValueError(f"Unsupported GNN encoder: {self.net}")
 
     def forward(self, data):
         return self.model(data.x, data.edge_index)
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         self.model.reset_parameters()
-
-
-
-# class GNN_2(nn.Module):
-#     def __init__(self, layer_sizes, batchnorm_mm=0.99):
-#         super().__init__()
-#
-#         self.input_size, self.representation_size = layer_sizes[0], layer_sizes[-1]
-#         in_dim, out_dim = self.input_size, self.representation_size
-#         layers = []
-#         if args.net == 'SGC':
-#             layers.append((SGConv(in_dim, out_dim,K=int(len(layer_sizes)-1),cached=True), 'x, edge_index -> x'), )
-#             layers.append(BatchNorm(out_dim, momentum=batchnorm_mm))
-#             layers.append(nn.PReLU())
-#
-#         self.model = Sequential('x, edge_index', layers)
-#
-#
-#     def forward(self, data):
-#         return self.model(data.x, data.edge_index)
-#
-#
-#     def reset_parameters(self):
-#         self.model.reset_parameters()
-
-
-
-
-
-
-
-
-
-
-
-
-

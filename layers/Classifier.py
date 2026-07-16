@@ -1,26 +1,17 @@
-import torch.nn.functional as F
-import torch.nn as nn
 import torch
+from torch import nn
 
 
 class Classifier(nn.Module):
-
-    def __init__(self, hidden_size, num_class):
+    def __init__(self, hidden_size: int, num_class: int) -> None:
         super().__init__()
-
         self.linear = nn.Linear(hidden_size, num_class, bias=True)
         self.reset_parameters()
 
-    def forward(self, x):
-        logits = self.linear(x)
-        prediction = torch.argmax(logits, dim=1)
+    def forward(self, embeddings):
+        logits = self.linear(embeddings)
+        predictions = torch.argmax(logits, dim=1)
+        return logits, predictions
 
-        return logits, prediction
-
-    def reset_parameters(self):
-        # kaiming_uniform
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                m.reset_parameters()
-
-
+    def reset_parameters(self) -> None:
+        self.linear.reset_parameters()

@@ -1,15 +1,19 @@
 import math
 
-def rbo_score(l1, l2, p):
-    if not l1.any() or  not l2.any():
+
+def rbo_score(first_ranking, second_ranking, persistence):
+    """Compute the rank-biased overlap used by UNREAL's node reordering."""
+    if not first_ranking.any() or not second_ranking.any():
         return 0
-    s1 = set()
-    s2 = set()
-    max_depth = len(l1)
+
+    first_seen = set()
+    second_seen = set()
     score = 0.0
-    for d in range(max_depth):
-        s1.add(l1[d])
-        s2.add(l2[d])
-        avg_overlap = len(s1 & s2) / (d + 1)
-        score += math.pow(p, d) * avg_overlap
-    return (1 - p) * score
+
+    for depth in range(len(first_ranking)):
+        first_seen.add(first_ranking[depth])
+        second_seen.add(second_ranking[depth])
+        average_overlap = len(first_seen & second_seen) / (depth + 1)
+        score += math.pow(persistence, depth) * average_overlap
+
+    return (1 - persistence) * score

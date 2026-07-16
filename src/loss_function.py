@@ -1,78 +1,85 @@
 import torch
 import torch.nn.functional as F
-from torch import autograd
-from torch import nn
+
+
+def log_softmax(values):
+    """Original UNREAL log-softmax implementation."""
+    return values - values.exp().sum(-1).log().unsqueeze(-1)
 
 
 class My_loss:
+    """Round-weighted loss retained for compatibility with prior experiments."""
 
-    def __init__(self, input, target,round,data,running_train_mask,args):
-        self.input=input
-        self.target=target
-        self.round=round
-        self.data=data
+    def __init__(
+        self,
+        input,
+        target,
+        round,
+        data,
+        running_train_mask,
+        args,
+    ) -> None:
+        self.inputs = input
+        self.targets = target
+        self.round_index = round
+        self.data = data
         self.running_train_mask = running_train_mask
-        self.args = args
-        self.stride =args.stride
-
-
+        self.stride = args.stride
 
     def weight(self):
-        confidence= torch.max(F.softmax(self.input, dim=1), dim=1)[0]
-        round_weight = torch.sigmoid(torch.tensor(self.round * self.stride)).to(self.args.device)
-        train_confidence=confidence*round_weight
-        running_train_index=torch.nonzero(self.running_train_mask)
-        data_train_index = torch.nonzero(self.data.train_mask)
-        train_confidence[data_train_index] = 1
-        weight=train_confidence[self.running_train_mask]
-        return weight
-
+        confidence = torch.max(F.softmax(self.inputs, dim=1), dim=1)[0]
+        round_weight = torch.sigmoid(
+            torch.tensor(
+                self.round_index * self.stride,
+                device=self.inputs.device,
+            )
+        )
+        train_confidence = confidence * round_weight
+        train_confidence[torch.nonzero(self.data.train_mask)] = 1
+        return train_confidence[self.running_train_mask]
 
     def loss(self):
-        weight =self.weight()
-        input_true = self.input[self.running_train_mask]
-        target_true = self.target[self.running_train_mask]
-        pred = log_softmax(input_true)
-        put=-pred[range(target_true.shape[0]), target_true]
-        loss=(put*weight).mean()
-        return loss
-
-
+        weights = self.weight()
+        inputs = self.inputs[self.running_train_mask]
+        targets = self.targets[self.running_train_mask]
+        negative_log_likelihood = -log_softmax(inputs)[
+            range(targets.shape[0]),
+            targets,
+        ]
+        return (negative_log_likelihood * weights).mean()
 
 
 class My_end_loss:
+    """Confidence-weighted final loss retained for backward compatibility."""
 
-    def __init__(self, input, target,data,running_train_mask,args):
-        self.input=input
-        self.target=target
-        self.data=data
+    def __init__(
+        self,
+        input,
+        target,
+        data,
+        running_train_mask,
+        args,
+    ) -> None:
+        self.inputs = input
+        self.targets = target
+        self.data = data
         self.running_train_mask = running_train_mask
-        self.args = args
-        self.stride =args.stride
-
-
+        self.stride = args.stride
 
     def weight(self):
-        confidence= torch.max(F.softmax(self.input, dim=1), dim=1)[0]
-        train_confidence=confidence
-        running_train_index=torch.nonzero(self.running_train_mask)
-        data_train_index = torch.nonzero(self.data.train_mask)
-        train_confidence[data_train_index] = 1
-        weight=train_confidence[self.running_train_mask]
-        return weight
-
+        train_confidence = torch.max(
+            F.softmax(self.inputs, dim=1),
+            dim=1,
+        )[0]
+        train_confidence[torch.nonzero(self.data.train_mask)] = 1
+        return train_confidence[self.running_train_mask]
 
     def loss(self):
-        weight =self.weight()
-        input_true = self.input[self.running_train_mask]
-        target_true = self.target[self.running_train_mask]
-        pred = log_softmax(input_true)
-        put=-pred[range(target_true.shape[0]), target_true]
-        loss=(put*weight).mean()
-        return loss
-
-
-
-
-def log_softmax(x): return x - x.exp().sum(-1).log().unsqueeze(-1)
-
+        weights = self.weight()
+        inputs = self.inputs[self.running_train_mask]
+        targets = self.targets[self.running_train_mask]
+        negative_log_likelihood = -log_softmax(inputs)[
+            range(targets.shape[0]),
+            targets,
+        ]
+        return (negative_log_likelihood * weights).mean()

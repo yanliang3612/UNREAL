@@ -1,131 +1,103 @@
-import os
-import os.path as osp
 import random
+from pathlib import Path
+from typing import Iterable, Optional
+
 import numpy as np
 import torch
 from sklearn.metrics import balanced_accuracy_score, f1_score
-from src.args import parse_args
-args = parse_args()
 
-def set_random_seeds(random_seed=0):
-    r"""Sets the seed for generating random numbers."""
-    torch.manual_seed(random_seed)
-    torch.cuda.manual_seed(random_seed)
+
+def set_random_seeds(seed: int = 0) -> None:
+    """Seed Python, NumPy, and PyTorch for reproducible experiments."""
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    np.random.seed(random_seed)
-    random.seed(random_seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
 
-def random_seed(repetition):
-    if args.dataset == "Cora" or args.dataset == "CiteSeer":
-        return int(repetition*10+1)
-    elif args.dataset == "PubMed" or args.dataset == "Computers":
-        return int(repetition)
+def random_seed(repetition: int, dataset: Optional[str] = None) -> int:
+    """Return the repetition seed used by the original experiments."""
+    if dataset is None:
+        # Retain compatibility with the original one-argument helper without
+        # parsing command-line arguments at module import time.
+        from src.args import parse_args
 
-def reset(value):
-    if hasattr(value, 'reset_parameters'):
-        value.reset_parameters()
-    else:
-        for child in value.children() if hasattr(value, 'children') else []:
+        dataset = parse_args().dataset
+
+    if dataset in {"Cora", "CiteSeer"}:
+        return repetition * 10 + 1
+    if dataset in {"PubMed", "Computers"}:
+        return repetition
+    raise ValueError(f"Unsupported dataset: {dataset}")
+
+
+def reset(module) -> None:
+    """Recursively reset a module and its children."""
+    if hasattr(module, "reset_parameters"):
+        module.reset_parameters()
+        return
+    if hasattr(module, "children"):
+        for child in module.children():
             reset(child)
 
 
-def create_dirs(dirs):
-    for dir_tree in dirs:
-        sub_dirs = dir_tree.split("/")
-        path = ""
-        for sub_dir in sub_dirs:
-            path = osp.join(path, sub_dir)
-            os.makedirs(path, exist_ok=True)
+def create_dirs(directories: Iterable[str]) -> None:
+    for directory in directories:
+        Path(directory).mkdir(parents=True, exist_ok=True)
 
 
-
-def config2string(args):
-    args_names, args_vals = enumerateConfig(args)
-    st = ''
-    for name, val in zip(args_names, args_vals):
-        if val == False:
-            continue
-        st_ = "{}_{}_".format(name, val)
-        st += st_
-
-    return st[:-1]
+def config_to_string(args) -> str:
+    """Serialize an argparse namespace for concise experiment logging."""
+    return "_".join(
+        f"{name}_{value}" for name, value in vars(args).items() if value is not False
+    )
 
 
-
-def enumerateConfig(args):
-    args_names = []
-    args_vals = []
-    for arg in vars(args):
-        args_names.append(arg)
-        args_vals.append(getattr(args, arg))
-
-    return args_names, args_vals
+# Backward-compatible name used by earlier versions of the repository.
+config2string = config_to_string
 
 
+def _split_metrics(predictions, labels, mask):
+    split_predictions = predictions[mask]
+    split_labels = labels[mask]
 
-def compute_accuracy(preds, labels, train_mask, val_mask, test_mask):
+    predictions_cpu = split_predictions.detach().cpu().numpy()
+    labels_cpu = split_labels.detach().cpu().numpy()
 
-    train_preds = preds[train_mask]
-    val_preds = preds[val_mask]
-    test_preds = preds[test_mask]
-    train_pred_list = train_preds.cpu().numpy()
-    val_preds_list = val_preds.cpu().numpy()
-    test_preds_list = test_preds.cpu().numpy()
-    y_train_true = labels[train_mask].cpu().numpy()
-    y_val_true = labels[val_mask].cpu().numpy()
-    y_test_true = labels[test_mask].cpu().numpy()
-
-
-    train_acc = (torch.sum(train_preds == labels[train_mask])).float() / ((labels[train_mask].shape[0]))
-    val_acc = (torch.sum(val_preds == labels[val_mask])).float() / ((labels[val_mask].shape[0]))
-    test_acc = (torch.sum(test_preds == labels[test_mask])).float() / ((labels[test_mask].shape[0]))
+    accuracy = (split_predictions == split_labels).float().mean().item() * 100
+    balanced_accuracy = balanced_accuracy_score(labels_cpu, predictions_cpu) * 100
+    macro_f1 = f1_score(labels_cpu, predictions_cpu, average="macro") * 100
+    return accuracy, balanced_accuracy, macro_f1
 
 
-    train_bacc = balanced_accuracy_score(y_train_true,train_pred_list)
-    val_bacc = balanced_accuracy_score(y_val_true,val_preds_list)
-    test_bacc = balanced_accuracy_score(y_test_true,test_preds_list)
+def compute_accuracy(predictions, labels, train_mask, val_mask, test_mask):
+    """Compute accuracy, balanced accuracy, and macro-F1 for each split."""
+    train_metrics = _split_metrics(predictions, labels, train_mask)
+    validation_metrics = _split_metrics(predictions, labels, val_mask)
+    test_metrics = _split_metrics(predictions, labels, test_mask)
 
-    train_f1 = f1_score(y_train_true,train_pred_list, average='macro')
-    val_f1 =  f1_score(y_val_true,val_preds_list, average='macro')
-    test_f1 = f1_score(y_test_true,test_preds_list, average='macro')
+    train_accuracy, train_balanced_accuracy, train_f1 = train_metrics
+    validation_accuracy, validation_balanced_accuracy, validation_f1 = (
+        validation_metrics
+    )
+    test_accuracy, test_balanced_accuracy, test_f1 = test_metrics
 
-    train_acc = train_acc * 100
-    val_acc = val_acc * 100
-    test_acc = test_acc * 100
-
-    train_bacc = train_bacc *100
-    val_bacc = val_bacc * 100
-    test_bacc = test_bacc * 100
-
-    train_f1 = train_f1 * 100
-    val_f1 = val_f1 * 100
-    test_f1 = test_f1 * 100
-
-    return train_acc, val_acc, test_acc,train_bacc,val_bacc,test_bacc,train_f1,val_f1,test_f1
-
-
-
-
-# def masking(fold, data):
-#
-#         return train_mask = data.train_mask ; val_mask = data.val_mask ; test_mask = data.test_mask
+    return (
+        train_accuracy,
+        validation_accuracy,
+        test_accuracy,
+        train_balanced_accuracy,
+        validation_balanced_accuracy,
+        test_balanced_accuracy,
+        train_f1,
+        validation_f1,
+        test_f1,
+    )
 
 
-
-
-
-def compute_representation(net, data, device):
-
-    net.eval()
-    reps = []
-
-    data = data.to(device)
+def compute_representation(network, data, device):
+    network.eval()
     with torch.no_grad():
-        reps.append(net(data))
-
-    reps = torch.cat(reps, dim=0)
-
-    return reps
-
+        return network(data.to(device))
