@@ -25,17 +25,15 @@
   <em>UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-Imbalanced Node Classification</em> (arXiv 2023)
 </p>
 
----
-
-## 1. Introduction
-
 <p align="center">
   <img src="figure/unreal_logo.png" width="90%" alt="UNREAL: Geometric Imbalance" />
 </p>
 
-Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the Riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the Riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
+## Overview
 
-## 2. Environment
+UNREAL addresses a failure mode of GNN self-training on class-imbalanced graphs: minority-class nodes can become geometrically ambiguous in the embedding space, making their pseudo-labels unreliable. The framework improves pseudo-label quality by aligning clustering and classification predictions, prioritizing candidates using both geometric proximity and confidence, and filtering ambiguous nodes before retraining.
+
+## 1. Environment
 
 The setup script targets Linux x86_64 with CUDA 11.3 and creates a Conda environment named `unreal`:
 
@@ -51,9 +49,9 @@ ENV_NAME=my_unreal_env bash scripts/setup_env.sh
 conda activate my_unreal_env
 ```
 
-## 3. Training Hyperparameters
+## 2. Training Hyperparameters
 
-### 3.1 Cora-Semi (imbalance ratio= 10, 20, 50, 100)
+### 2.1 Cora-Semi (imbalance ratio= 10, 20, 50, 100)
 
 - Cora-GCN (imbalance ratio= 10)
   ```bash
@@ -200,7 +198,7 @@ conda activate my_unreal_env
     --threshold 0.25
   ```
 
-### 3.2 CiteSeer-Semi (imbalance ratio= 10, 20, 50, 100)
+### 2.2 CiteSeer-Semi (imbalance ratio= 10, 20, 50, 100)
 
 - CiteSeer-GCN (imbalance ratio= 10)
   ```bash
@@ -347,7 +345,7 @@ conda activate my_unreal_env
     --threshold 0.25
   ```
 
-### 3.3 PubMed-Semi (imbalance ratio= 10, 20, 50, 100)
+### 2.3 PubMed-Semi (imbalance ratio= 10, 20, 50, 100)
 
 - PubMed-GCN (imbalance ratio= 10)
   ```bash
@@ -495,7 +493,7 @@ conda activate my_unreal_env
   ```
 
 
-## 4. Baselines
+## 3. Baselines
 
 Baseline implementations and hyperparameter configurations:
 
@@ -506,11 +504,11 @@ Baseline implementations and hyperparameter configurations:
 
 We strictly adhere to the hyperparameter settings as specified in these papers. For detailed information, please refer to the respective publications.
 
-## 5. Configuration
+## 4. Configuration
 
 All algorithms and models are implemented in Python and PyTorch Geometric. Most experiments are conducted on a server equipped with an NVIDIA GeForce RTX 3090 GPU (24 GB GDDR6X memory) and an Intel(R) Xeon(R) Silver 4210R CPU @ 2.40 GHz. The experiments on **ogbn-arxiv** and **Flickr** are conducted using an NVIDIA A100 80GB PCIe Tensor Core GPU (80 GB HBM2e memory).
 
-## 6. Cite Us
+## 5. Cite Us
 
 If you find this work useful, please cite:
 
