@@ -7,16 +7,36 @@ import torch
 from src.utils import compute_accuracy, config_to_string
 
 
+def _resolve_device(device_name: str) -> torch.device:
+    if device_name == "auto":
+        return torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    device = torch.device(device_name)
+    if device.type != "cuda":
+        return device
+    if not torch.cuda.is_available():
+        raise RuntimeError(f"CUDA device requested but CUDA is unavailable: {device}")
+
+    device_index = device.index if device.index is not None else 0
+    if device_index >= torch.cuda.device_count():
+        raise ValueError(
+            f"CUDA device index {device_index} is unavailable; "
+            f"found {torch.cuda.device_count()} GPU(s)."
+        )
+    return device
+
+
 class Embedder:
     """Shared experiment bookkeeping and evaluation utilities."""
 
     def __init__(self, args) -> None:
         self.args = args
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = _resolve_device(getattr(args, "device", "auto"))
         self.path = Path(__file__).resolve().parent / "data" / args.dataset
         self.hidden_layers = [args.dim] * args.layers
 
         print(f"\n[Config] {config_to_string(args)}\n")
+        print(f"[Device] {self.device}\n")
 
         self.best_val = 0.0
         self.cnt = 0

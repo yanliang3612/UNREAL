@@ -64,6 +64,7 @@ For large datasets, K-means can instead run on an NVIDIA GPU through `torch-kmea
 ```bash
 python main.py \
   --dataset Cora \
+  --device cuda:7 \
   --kmeans_backend gpu
 ```
 
@@ -74,6 +75,18 @@ python -m pip install torch-kmeans==0.2.0
 ```
 
 The GPU option accelerates the clustering stage only and requires CUDA. Because the CPU and GPU backends use different K-means implementations, their cluster assignments may differ slightly even with equivalent optimization settings. Omit `--kmeans_backend` to reproduce the default CPU configuration.
+
+### Selecting a Compute Device
+
+Use `--device` to select a physical GPU directly, without remapping GPU indices:
+
+```bash
+python main.py \
+  --dataset Cora \
+  --device cuda:7
+```
+
+The default value is `auto`, which uses `cuda:0` when CUDA is available and otherwise falls back to the CPU. You can also explicitly use `--device cpu`.
 
 ## 2. Training Hyperparameters
 

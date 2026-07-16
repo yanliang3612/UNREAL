@@ -21,6 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=10,
         help="Class imbalance ratio.",
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        help="Compute device, for example: auto, cpu, cuda:0, or cuda:7.",
+    )
 
     # Encoder.
     parser.add_argument("--dim", type=int, default=128, help="Hidden dimension.")
