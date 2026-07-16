@@ -1,20 +1,25 @@
 # Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025)
 
-Official Pytorch implementation of "Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
+Official PyTorch implementation of "Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
 
-**Previous Version: UNREAL:Unlabeled Nodes Retrieval and Labeling for Heavily-imbalanced Node Classification (Arxiv 2023)**
+**Previous version:** *UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-Imbalanced Node Classification* (arXiv 2023)
 
-[[Project Page]](https://divinyan.com/UNREAL/) [[Paper]](https://openreview.net/forum?id=BND9CutZf6&referrer=%5Bthe%20profile%20of%20Liang%20Yan%5D(%2Fprofile%3Fid%3D~Liang_Yan5)) [[Arxiv]](https://arxiv.org/abs/2303.10371)
+[![Project Page](https://img.shields.io/badge/Project-Page-2F80ED)](https://divinyan.com/UNREAL/)
+[![Paper](https://img.shields.io/badge/Paper-NeurIPS_2025-B31B1B)](https://openreview.net/forum?id=BND9CutZf6)
+[![arXiv](https://img.shields.io/badge/arXiv-2303.10371-B31B1B)](https://arxiv.org/abs/2303.10371)
 
-Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang 
+Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang
 
 ---
 
 ## 1. Introduction
+
 ![unreal](figure/unreal_pipeline.png)
-Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
+
+Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the Riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the Riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
 
 ## 2. Environment
+
 ```bash
 conda create -n "unreal" python=3.8.13
 source activate unreal
@@ -26,160 +31,455 @@ pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_scatter-2.1.0%2B
 pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_sparse-0.6.16%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
 pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.1%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
 ```
+
 ## 3. Training Hyperparameters
+
 ### 3.1 Cora-Semi (imbalance ratio= 10, 20, 50, 100)
+
 - Cora-GCN (imbalance ratio= 10)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 10 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GAT (imbalance ratio= 10)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 10 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-SAGE (imbalance ratio= 10)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 10 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GCN (imbalance ratio= 20)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 20 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GAT (imbalance ratio= 20)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 20 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-SAGE (imbalance ratio= 20)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 20 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GCN (imbalance ratio= 50)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 50 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GAT (imbalance ratio= 50)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 50 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-SAGE (imbalance ratio= 50)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 50 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GCN (imbalance ratio= 100)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 100 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-GAT (imbalance ratio= 100)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 100 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - Cora-SAGE (imbalance ratio= 100)
   ```bash
-  python main.py --dataset Cora --repetitions 5 --imb_ratio 100 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset Cora \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 
 ### 3.2 CiteSeer-Semi (imbalance ratio= 10, 20, 50, 100)
+
 - CiteSeer-GCN (imbalance ratio= 10)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 10 --net GCN  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GCN \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GAT (imbalance ratio= 10)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 10 --net GAT  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GAT \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-SAGE (imbalance ratio= 10)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 10 --net SAGE  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net SAGE \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GCN (imbalance ratio= 20)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 20 --net GCN  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GCN \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GAT (imbalance ratio= 20)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 20 --net GAT  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GAT \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-SAGE (imbalance ratio= 20)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 20 --net SAGE  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net SAGE \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GCN (imbalance ratio= 50)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 50 --net GCN  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GCN \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GAT (imbalance ratio= 50)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 50 --net GAT  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GAT \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-SAGE (imbalance ratio= 50)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 50 --net SAGE  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net SAGE \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GCN (imbalance ratio= 100)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 100 --net GCN  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GCN \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-GAT (imbalance ratio= 100)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 100 --net GAT  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GAT \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - CiteSeer-SAGE (imbalance ratio= 100)
   ```bash
-  python main.py --dataset CiteSeer --repetitions 5 --imb_ratio 100 --net SAGE  --rounds 10 --ad 5 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset CiteSeer \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net SAGE \
+    --rounds 10 \
+    --ad 5 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 
 ### 3.3 PubMed-Semi (imbalance ratio= 10, 20, 50, 100)
+
 - PubMed-GCN (imbalance ratio= 10)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 10 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GAT (imbalance ratio= 10)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 10 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-SAGE (imbalance ratio= 10)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 10 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 10 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GCN (imbalance ratio= 20)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 20 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GAT (imbalance ratio= 20)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 20 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-SAGE (imbalance ratio= 20)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 20 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 20 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GCN (imbalance ratio= 50)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 50 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GAT (imbalance ratio= 50)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 50 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-SAGE (imbalance ratio= 50)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 50 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 50 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GCN (imbalance ratio= 100)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 100 --net GCN  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GCN \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-GAT (imbalance ratio= 100)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 100 --net GAT  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net GAT \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 - PubMed-SAGE (imbalance ratio= 100)
   ```bash
-  python main.py --dataset  PubMed --repetitions 5 --imb_ratio 100 --net SAGE  --rounds 40 --ad 4 --rbo 0.5 --threshold 0.25
+  python main.py \
+    --dataset PubMed \
+    --repetitions 5 \
+    --imb_ratio 100 \
+    --net SAGE \
+    --rounds 40 \
+    --ad 4 \
+    --rbo 0.5 \
+    --threshold 0.25
   ```
 
 
 ## 4. Baselines
-The Implementation of Baselines and the Configuration of Hyperparameters:
+
+Baseline implementations and hyperparameter configurations:
+
 - For the implementation and hyperparameters setting of **Re-Weight, PC Softmax, BalancedSoftmax, TAM**, please refer to [TAM](https://github.com/Jaeyun-Song/TAM).
 - For the implementation and hyperparameters setting of **GraphSmote**, please refer to [GraphSmote](https://github.com/TianxiangZhao/GraphSmote).
 - For the implementation and hyperparameters setting of **Renode**, please refer to [Renode](https://github.com/victorchen96/ReNode).
@@ -187,21 +487,20 @@ The Implementation of Baselines and the Configuration of Hyperparameters:
 
 We strictly adhere to the hyperparameter settings as specified in these papers. For detailed information, please refer to the respective publications.
 
-
-
-
 ## 5. Configuration
+
 All the algorithms and models are implemented in Python and PyTorch Geometric. Experiments are conducted on a server with an NVIDIA 3090 GPU (24 GB memory) and an Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz.
 
-
 ## 6. Cite Us
-Feel free to cite this work if you find it useful to you!
-```bash
+
+If you find this work useful, please cite:
+
+```bibtex
 @inproceedings{yan2025geometric,
-      title={Geometric Imbalance in Semi-Supervised Node Classification},
-      author={Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Yang, Mengling and Yang, Chen, and Zhou, Min and Ding, Weiyang and Xie, Yutong and Huang, Zengfeng},
-      booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
-      year={2025},
-      url={https://openreview.net/forum?id=BND9CutZf6}
-      }
+  title     = {Geometric Imbalance in Semi-Supervised Node Classification},
+  author    = {Yan, Liang and Zhang, Shengzhong and Li, Bisheng and Yang, Mengling and Yang, Chen and Zhou, Min and Ding, Weiyang and Xie, Yutong and Huang, Zengfeng},
+  booktitle = {The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+  year      = {2025},
+  url       = {https://openreview.net/forum?id=BND9CutZf6}
+}
 ```
