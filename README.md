@@ -508,7 +508,7 @@ We strictly adhere to the hyperparameter settings as specified in these papers. 
 
 ## 5. Configuration
 
-All the algorithms and models are implemented in Python and PyTorch Geometric. Experiments are conducted on a server with an NVIDIA 3090 GPU (24 GB memory) and an Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz.
+All algorithms and models are implemented in Python and PyTorch Geometric. Most experiments are conducted on a server equipped with an NVIDIA GeForce RTX 3090 GPU (24 GB GDDR6X memory) and an Intel(R) Xeon(R) Silver 4210R CPU @ 2.40 GHz. The experiments on **ogbn-arxiv** and **Flickr** are conducted using an NVIDIA A100 80GB PCIe Tensor Core GPU (80 GB HBM2e memory).
 
 ## 6. Cite Us
 
