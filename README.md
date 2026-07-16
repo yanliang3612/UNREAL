@@ -37,16 +37,18 @@ Class imbalance in graph data presents a significant challenge for effective nod
 
 ## 2. Environment
 
+The setup script targets Linux x86_64 with CUDA 11.3 and creates a Conda environment named `unreal`:
+
 ```bash
-conda create -n "unreal" python=3.8.13
-source activate unreal
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-pip install torch_geometric
-pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/pyg_lib-0.3.1%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
-pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_cluster-1.6.0%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
-pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_scatter-2.1.0%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
-pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_sparse-0.6.16%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
-pip install https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.1%2Bpt112cu113-cp38-cp38-linux_x86_64.whl
+bash scripts/setup_env.sh
+conda activate unreal
+```
+
+To use a different environment name:
+
+```bash
+ENV_NAME=my_unreal_env bash scripts/setup_env.sh
+conda activate my_unreal_env
 ```
 
 ## 3. Training Hyperparameters
