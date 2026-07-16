@@ -34,22 +34,29 @@ class Planetoid(InMemoryDataset):
             raise ValueError(f"Unsupported split: {split}")
 
         super().__init__(root, transform, pre_transform)
-        self.data, self.slices = torch.load(self.processed_paths[0])
-        self.data.train_mask = Imbalance(
+        try:
+            data, slices = torch.load(
+                self.processed_paths[0],
+                weights_only=False,
+            )
+        except TypeError:
+            # PyTorch versions before 2.0 do not support `weights_only`.
+            data, slices = torch.load(self.processed_paths[0])
+
+        data.train_mask = Imbalance(
             self.name,
-            self.data,
+            data,
             self.ratio,
         ).split_semi_dataset()
 
         if self.split == "full":
-            data = self.get(0)
             data.train_mask.fill_(True)
             data.train_mask[data.val_mask | data.test_mask] = False
-            self.data, self.slices = self.collate([data])
+            data, slices = self.collate([data])
         elif self.split == "random":
-            data = self.get(0)
             data.train_mask.fill_(False)
-            for class_index in range(self.num_classes):
+            num_classes = int(data.y.max().item()) + 1
+            for class_index in range(num_classes):
                 indices = (data.y == class_index).nonzero(as_tuple=False).view(-1)
                 permutation = torch.randperm(indices.size(0))
                 data.train_mask[indices[permutation[:num_train_per_class]]] = True
@@ -62,7 +69,9 @@ class Planetoid(InMemoryDataset):
 
             data.test_mask.fill_(False)
             data.test_mask[remaining[num_val : num_val + num_test]] = True
-            self.data, self.slices = self.collate([data])
+            data, slices = self.collate([data])
+
+        self.data, self.slices = data, slices
 
     @property
     def raw_dir(self) -> str:
