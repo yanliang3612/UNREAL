@@ -30,7 +30,7 @@
 ## 1. Introduction
 
 <p align="center">
-  <img src="figure/unreal_pipeline.png" width="70%" alt="Overview of the proposed framework" />
+  <img src="figure/unreal_logo.png" width="90%" alt="UNREAL: Geometric Imbalance" />
 </p>
 
 Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the Riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the Riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
