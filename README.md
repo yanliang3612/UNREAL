@@ -49,6 +49,32 @@ ENV_NAME=my_unreal_env bash scripts/setup_env.sh
 conda activate my_unreal_env
 ```
 
+### Optional GPU-Accelerated K-means
+
+The reported configuration uses scikit-learn K-means on the CPU, which remains the default:
+
+```bash
+python main.py \
+  --dataset Cora \
+  --kmeans_backend cpu
+```
+
+For large datasets, K-means can instead run on an NVIDIA GPU through `torch-kmeans`:
+
+```bash
+python main.py \
+  --dataset Cora \
+  --kmeans_backend gpu
+```
+
+The setup script installs `torch-kmeans==0.2.0`. For an existing environment, install it manually:
+
+```bash
+python -m pip install torch-kmeans==0.2.0
+```
+
+The GPU option accelerates the clustering stage only and requires CUDA. Because the CPU and GPU backends use different K-means implementations, their cluster assignments may differ slightly even with equivalent optimization settings. Omit `--kmeans_backend` to reproduce the default CPU configuration.
+
 ## 2. Training Hyperparameters
 
 ### 2.1 Cora-Semi (imbalance ratio= 10, 20, 50, 100)

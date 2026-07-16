@@ -8,7 +8,7 @@ from src.utils import reset, set_random_seeds, random_seed
 from src.loss_function import My_loss, My_end_loss
 from src.rbo import rbo_score
 # masking
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans as SklearnKMeans
 from embedder import embedder
 from torch_geometric.utils import to_dense_adj
 from src.focalloss import FocalLoss
@@ -28,6 +28,41 @@ class Summer_Trainer(embedder):
     def _init_model(self):
         self.model = Summer(self.encoder, self.classifier).to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=self.args.lr, weight_decay=self.args.decay)
+
+    def _run_kmeans(self, rep):
+        """Cluster normalized embeddings with the configured K-means backend."""
+        if self.args.kmeans_backend == 'cpu':
+            rep_cpu = rep.to('cpu').numpy()
+            clustering = SklearnKMeans(n_clusters=self.args.num_K).fit(rep_cpu)
+            return clustering.predict(rep_cpu), rep_cpu
+
+        if not rep.is_cuda:
+            raise RuntimeError(
+                "GPU K-means requires a CUDA-enabled PyTorch installation and an available GPU."
+            )
+
+        try:
+            from torch_kmeans import KMeans as TorchKMeans
+        except ImportError as exc:
+            raise ImportError(
+                "GPU K-means requires torch-kmeans. "
+                "Install it with `python -m pip install torch-kmeans==0.2.0`."
+            ) from exc
+
+        # Match the main scikit-learn defaults while keeping the embeddings on GPU.
+        clustering = TorchKMeans(
+            n_clusters=self.args.num_K,
+            init_method='k-means++',
+            num_init=10,
+            max_iter=300,
+            tol=1e-4,
+            seed=int(torch.initial_seed() % (2 ** 31)),
+            verbose=False,
+        )
+        with torch.no_grad():
+            clustering_result = clustering(rep.unsqueeze(0)).labels.squeeze(0)
+
+        return clustering_result.to('cpu').numpy(), rep.to('cpu').numpy()
 
 
     def _init_dataset(self):
@@ -88,10 +123,8 @@ class Summer_Trainer(embedder):
             rep = self.model.encoder(self.data).detach()
             # 归一化操作
             rep = F.normalize(rep, dim=1)
-            rep = rep.to('cpu').numpy()
             # 得到每一个点的聚类结果
-            clustering = KMeans(n_clusters=self.args.num_K).fit(rep)
-            clustering_result = clustering.predict(rep)
+            clustering_result, rep = self._run_kmeans(rep)
 
             # Pseudo tags
             labeled_centroid_list = []
@@ -299,4 +332,3 @@ def sample_mask(idx, l):
     mask = torch.zeros(l)
     mask[idx] = 1
     return torch.as_tensor(mask, dtype=torch.bool)
-

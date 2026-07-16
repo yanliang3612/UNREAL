@@ -27,6 +27,13 @@ def parse_args():
     parser.add_argument("--rounds", type=int, default=40)
     parser.add_argument("--clustering", action='store_true', default=True)
     parser.add_argument("--num_K", type=int, default=200)
+    parser.add_argument(
+        "--kmeans_backend",
+        type=str,
+        choices=["cpu", "gpu"],
+        default="cpu",
+        help="K-means backend: scikit-learn on CPU (default) or torch-kmeans on GPU.",
+    )
     parser.add_argument("--stride", '-s', type=float, default=1.0, help="stride of round")
     parser.add_argument("--threshold", type=float, default=0.25, help="distance threshold")
     parser.add_argument("--rbo", type=float, default=0.5, help="rbo weight")

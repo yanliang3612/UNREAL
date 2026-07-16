@@ -27,7 +27,7 @@ conda install --yes \
   cudatoolkit=11.3 \
   -c pytorch
 
-python -m pip install torch_geometric
+python -m pip install torch_geometric torch-kmeans==0.2.0
 python -m pip install \
   "https://data.pyg.org/whl/torch-1.12.0%2Bcu113/pyg_lib-0.3.1%2Bpt112cu113-cp38-cp38-linux_x86_64.whl" \
   "https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_cluster-1.6.0%2Bpt112cu113-cp38-cp38-linux_x86_64.whl" \
