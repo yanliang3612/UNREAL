@@ -1,20 +1,37 @@
-# Geometric Imbalance in Semi-Supervised Node Classification (NeurIPS 2025)
+<h1 align="center">Geometric Imbalance in Semi-Supervised Node Classification</h1>
 
-Official PyTorch implementation of "Geometric Imbalance in Semi-Supervised Node Classification" (NeurIPS 2025).
+<p align="center">
+  <a href="https://divinyan.com/UNREAL/"><img src="https://img.shields.io/badge/Project-Page-2F80ED" alt="Project Page" /></a>
+  <a href="https://openreview.net/forum?id=BND9CutZf6"><img src="https://img.shields.io/badge/Paper-NeurIPS_2025-B31B1B" alt="NeurIPS 2025 Paper" /></a>
+  <a href="https://arxiv.org/abs/2303.10371"><img src="https://img.shields.io/badge/arXiv-2303.10371-B31B1B" alt="arXiv" /></a>
+</p>
 
-**Previous version:** *UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-Imbalanced Node Classification* (arXiv 2023)
+<p align="center">
+  The official PyTorch implementation of the NeurIPS 2025 paper
+  <em>Geometric Imbalance in Semi-Supervised Node Classification</em>.
+</p>
 
-[![Project Page](https://img.shields.io/badge/Project-Page-2F80ED)](https://divinyan.com/UNREAL/)
-[![Paper](https://img.shields.io/badge/Paper-NeurIPS_2025-B31B1B)](https://openreview.net/forum?id=BND9CutZf6)
-[![arXiv](https://img.shields.io/badge/arXiv-2303.10371-B31B1B)](https://arxiv.org/abs/2303.10371)
+<p align="center">
+  Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang,<br />
+  Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang
+</p>
 
-Authors: Liang Yan, Shengzhong Zhang, Bisheng Li, Menglin Yang, Chen Yang, Min Zhou, Weiyang Ding, Yutong Xie, Zengfeng Huang
+<p align="center">
+  <strong>The Thirty-ninth Annual Conference on Neural Information Processing Systems (NeurIPS), 2025</strong>
+</p>
+
+<p align="center">
+  <strong>Previous version:</strong>
+  <em>UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-Imbalanced Node Classification</em> (arXiv 2023)
+</p>
 
 ---
 
 ## 1. Introduction
 
-![unreal](figure/unreal_pipeline.png)
+<p align="center">
+  <img src="figure/unreal_pipeline.png" width="70%" alt="Overview of the proposed framework" />
+</p>
 
 Class imbalance in graph data presents a significant challenge for effective node classification, particularly in semi-supervised scenarios. In this work, we formally introduce the concept of geometric imbalance, which captures how message passing on class-imbalanced graphs leads to geometric ambiguity among minority-class nodes in the Riemannian manifold embedding space. We provide a rigorous theoretical analysis of geometric imbalance on the Riemannian manifold and propose a unified framework that explicitly mitigates it through pseudo-label alignment, node reordering, and ambiguity filtering. Extensive experiments on diverse benchmarks show that our approach consistently outperforms existing methods, especially under severe class imbalance. Our findings offer new theoretical insights and practical tools for robust semi-supervised node classification.
 
