@@ -32,7 +32,7 @@ class Embedder:
     def __init__(self, args) -> None:
         self.args = args
         self.device = _resolve_device(getattr(args, "device", "auto"))
-        self.path = Path(__file__).resolve().parent / "data" / args.dataset
+        self.path = Path(__file__).resolve().parent / "data"
         self.hidden_layers = [args.dim] * args.layers
 
         print(f"\n[Config] {config_to_string(args)}\n")

@@ -49,6 +49,10 @@ ENV_NAME=my_unreal_env bash scripts/setup_env.sh
 conda activate my_unreal_env
 ```
 
+The repository includes both the raw and processed Cora files under
+`data/Cora`, so Cora experiments can run immediately after cloning and setting
+up the environment, without downloading the dataset separately.
+
 ### Optional GPU-Accelerated K-means
 
 The reported configuration uses scikit-learn K-means on the CPU, which remains the default:
