@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="mailto:yanliangfdu@gmail.com">
-    <img src="https://readme-typing-svg.demolab.com?font=Inter&amp;weight=700&amp;size=18&amp;pause=1200&amp;color=0A66C2&amp;center=true&amp;vCenter=true&amp;width=860&amp;lines=Real-time+Q%26A+%E2%80%A2+code+contributions+%E2%80%A2+pull+requests;contact%3A+yanliangfdu%40gmail.com" alt="Real-time Q&amp;A, code contributions, pull requests, and contact" />
+    <img src="https://readme-typing-svg.demolab.com?font=Inter&amp;weight=700&amp;size=18&amp;pause=1200&amp;color=C56A4A&amp;center=true&amp;vCenter=true&amp;width=860&amp;lines=Real-time+Q%26A+%E2%80%A2+code+contributions+%E2%80%A2+pull+requests;contact%3A+yanliangfdu%40gmail.com" alt="Real-time Q&amp;A, code contributions, pull requests, and contact" />
   </a>
 </p>
 
