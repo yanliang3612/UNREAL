@@ -21,6 +21,12 @@
 </p>
 
 <p align="center">
+  <a href="mailto:yanliangfdu@gmail.com">
+    <img src="https://readme-typing-svg.demolab.com?font=Inter&amp;weight=700&amp;size=18&amp;pause=1200&amp;color=0A66C2&amp;center=true&amp;vCenter=true&amp;width=860&amp;lines=Real-time+Q%26A+%E2%80%A2+code+contributions+%E2%80%A2+pull+requests;contact%3A+yanliangfdu%40gmail.com" alt="Real-time Q&amp;A, code contributions, pull requests, and contact" />
+  </a>
+</p>
+
+<p align="center">
   <strong>Previous version:</strong>
   <em>UNREAL: Unlabeled Nodes Retrieval and Labeling for Heavily-Imbalanced Node Classification</em> (arXiv 2023)
 </p>
