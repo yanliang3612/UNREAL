@@ -1,6 +1,6 @@
-<p align="center">
-  <img src="figure/unreal_header_logo.png" width="180" alt="UNREAL logo" />
-</p>
+<div align="center">
+  <img src="figure/unreal_header_logo.png" width="150" alt="UNREAL logo" />
+</div>
 
 <h1 align="center">Geometric Imbalance in Semi-Supervised Node Classification</h1>
 
